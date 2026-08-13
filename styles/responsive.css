@@ -1,0 +1,117 @@
+/* Breakpoints and the reduced-motion opt-out. Imported last so these override. */
+
+@media (width <= 700px) {
+  .player {
+    grid-template-columns: 58px minmax(0, 1fr) 160px;
+    gap: 10px;
+    width: calc(100vw - 20px);
+    min-height: 82px;
+    padding: 9px 13px 9px 9px;
+  }
+  .sleeve {
+    width: 58px;
+    height: 58px;
+  }
+  .track-copy {
+    margin-bottom: 5px;
+  }
+  .track-copy strong {
+    font-size: 13px;
+  }
+  .controls {
+    gap: 4px;
+  }
+}
+
+@media (width <= 560px) {
+  .desk-clock {
+    top: calc(14px + env(safe-area-inset-top));
+    left: 14px;
+  }
+  .desk-clock time {
+    font-size: 13px;
+  }
+  .desk-clock small {
+    font-size: 10px;
+  }
+
+  /* the centre badge would collide with the clock and the links */
+  .now-badge {
+    display: none;
+  }
+
+  .top-links {
+    top: calc(9px + env(safe-area-inset-top));
+    right: 10px;
+    gap: 5px;
+  }
+  .top-links a,
+  .top-links button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(40, 22, 30, 0.42);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .top-links a span,
+  .top-links button span {
+    display: none;
+  }
+
+  .player {
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    grid-template-columns: 58px minmax(0, 1fr);
+    grid-template-areas:
+      'art track'
+      'controls controls';
+    gap: 8px 12px;
+    width: calc(100vw - 20px);
+    min-height: 0;
+    padding: 10px 14px 9px 10px;
+    border-radius: 26px;
+  }
+  .sleeve {
+    grid-area: art;
+  }
+  .track {
+    grid-area: track;
+  }
+  .controls {
+    grid-area: controls;
+    gap: clamp(10px, 4vw, 22px);
+  }
+  .icon-btn {
+    width: 36px;
+    height: 34px;
+  }
+  .toast {
+    bottom: calc(12px + env(safe-area-inset-bottom) + 128px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pendant,
+  .plant-sway,
+  .screen-glow,
+  .cursor,
+  .colleague,
+  .steam path,
+  .mote,
+  .birds,
+  .city-window.is-lit,
+  .now-badge.is-playing .now-dot,
+  .bars i,
+  .clock-colon {
+    animation: none;
+  }
+  .sleeve img {
+    animation: none;
+  }
+  .mote,
+  .steam path {
+    opacity: 0.3;
+  }
+}

@@ -1,0 +1,9 @@
+/* The whole stylesheet, split by concern. Import order is cascade order:
+   base → scene → chrome → player → queue → toast → responsive overrides. */
+@import '../styles/base.css';
+@import '../styles/scene.css';
+@import '../styles/chrome.css';
+@import '../styles/player.css';
+@import '../styles/queue.css';
+@import '../styles/toast.css';
+@import '../styles/responsive.css';

@@ -1,0 +1,180 @@
+/* The office backdrop and everything that moves in it. Class names here are
+   applied to SVG nodes in `components/scene/`. */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.city-window {
+  opacity: 0.18;
+}
+.city-window.is-lit {
+  animation: window-flicker 9s ease-in-out infinite;
+}
+@keyframes window-flicker {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  44% {
+    opacity: 0.75;
+  }
+  46% {
+    opacity: 0.3;
+  }
+  48% {
+    opacity: 0.85;
+  }
+  72% {
+    opacity: 0.6;
+  }
+}
+
+.pendant {
+  animation: pendant-sway 7.5s ease-in-out infinite;
+}
+@keyframes pendant-sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+.plant-sway {
+  animation: plant-sway 9s ease-in-out infinite;
+}
+.plant-sway-slow {
+  animation-duration: 12s;
+  animation-direction: alternate-reverse;
+}
+@keyframes plant-sway {
+  0%,
+  100% {
+    transform: rotate(-0.9deg);
+  }
+  50% {
+    transform: rotate(0.9deg);
+  }
+}
+
+.screen-glow {
+  animation: screen-glow 5.5s ease-in-out infinite;
+  opacity: 0.16;
+}
+@keyframes screen-glow {
+  0%,
+  100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
+.cursor {
+  animation: cursor-blink 1.1s step-end infinite;
+}
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 0.5;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.colleague {
+  animation: colleague-breathe 6.5s ease-in-out infinite;
+  transform-origin: 672px 700px;
+}
+.colleague-b {
+  animation-duration: 7.8s;
+  animation-delay: -1.4s;
+  transform-origin: 916px 700px;
+}
+@keyframes colleague-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-2.5px) scaleY(1.006);
+  }
+}
+
+.steam path {
+  opacity: 0;
+  /* Grow the plume from its own base, i.e. the lip of the cup. Without this the
+     initial `transform-box: view-box` puts the origin at the centre of the whole
+     1600x900 viewBox, so `scaleY` swings the steam about y=450 — which lifts it
+     off the cups and drags it downwards faster than translateY raises it. */
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: steam-rise 4.6s ease-out infinite;
+}
+.steam .steam-b {
+  animation-duration: 5.4s;
+  animation-delay: -2.2s;
+}
+@keyframes steam-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scaleY(0.6);
+  }
+  25% {
+    opacity: 0.5;
+  }
+  65% {
+    opacity: 0.28;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-42px) scaleY(1.25);
+  }
+}
+
+.mote {
+  opacity: 0;
+  animation-name: mote-float;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes mote-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 14px);
+  }
+  20% {
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--drift, 20px), -78px);
+  }
+}
+
+.birds {
+  animation: birds-drift 26s linear infinite;
+  opacity: 0.65;
+}
+@keyframes birds-drift {
+  0% {
+    transform: translate(-60px, 12px);
+  }
+  100% {
+    transform: translate(760px, -46px);
+  }
+}

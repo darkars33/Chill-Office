@@ -1,5 +1,5 @@
 // Find a real, embeddable YouTube upload for a song and print a playlist entry
-// you can paste into src/playlist.js.
+// you can paste into lib/playlist.js.
 //
 //   node scripts/resolve-playlist.mjs "Chaiyya Chaiyya|Dil Se|1998|Sukhwinder Singh"
 //   node scripts/resolve-playlist.mjs "Pehla Nasha|Jo Jeeta Wohi Sikandar|1992|Udit Narayan"
@@ -206,7 +206,7 @@ console.error(`channel: ${found.channel}`)
 console.error(
   `runtime: ${Math.floor(found.seconds / 60)}:${String(found.seconds % 60).padStart(2, '0')}`,
 )
-console.error('\nverified public and embeddable. Paste into src/playlist.js:\n')
+console.error('\nverified public and embeddable. Paste into lib/playlist.js:\n')
 
 const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
 console.log(`  {

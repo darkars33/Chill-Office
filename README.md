@@ -7,9 +7,11 @@ classics from the 70s, 80s and 90s on rotation.
 Built in the spirit of [Tapri Tapes](https://chai-tapri-wala.vercel.app/), moved
 indoors.
 
+Built with Next.js (App Router) and React.
+
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:3000
 ```
 
 ## About the music
@@ -61,7 +63,7 @@ Where it landed:
 
 Kishore Kumar, Rafi, Lata, Asha, Mukesh, Kumar Sanu, Udit Narayan, Alka Yagnik,
 S. P. Balasubrahmanyam; R.D. Burman through Bappi Lahiri to A. R. Rahman. The
-full list is in [`src/playlist.js`](src/playlist.js).
+full list is in [`lib/playlist.js`](lib/playlist.js).
 
 ## Controls
 
@@ -94,7 +96,7 @@ node scripts/resolve-playlist.mjs "Chaiyya Chaiyya|Dil Se|1998|Sukhwinder Singh"
 ```
 
 It searches, verifies the result is embeddable, and prints an entry ready to
-paste into `src/playlist.js`. Use the same command to add songs.
+paste into `lib/playlist.js`. Use the same command to add songs.
 
 Both scripts talk to youtube.com one request at a time with backoff. They are
 slow on purpose — going faster gets you throttled and the results get worse.
@@ -105,18 +107,18 @@ If you have licensed files, or a locked-down network, swap the YouTube player fo
 an `<audio>` element:
 
 1. Put the files in `public/audio/`.
-2. Add a `src` to each entry in `src/playlist.js` (`src: '/audio/track.mp3'`).
-3. Replace `useYouTubePlayer.js` with a hook wrapping one `HTMLAudioElement`.
-   It needs to expose the same shape the UI already consumes — `playing`,
-   `time`, `duration`, `play`, `pause`, `toggle`, `seek`, `nudge`, `toggleMute`
-   — so `App.jsx` keeps working. Point `.sleeve img` at your own artwork.
+2. Add a `src` to each entry in `lib/playlist.js` (`src: '/audio/track.mp3'`).
+3. Replace `hooks/useYouTubePlayer.js` with a hook wrapping one
+   `HTMLAudioElement`. It needs to expose the same shape the UI already consumes
+   — `playing`, `time`, `duration`, `play`, `pause`, `toggle`, `seek`, `nudge`,
+   `toggleMute` — so `useChillOffice` keeps working. Point `AlbumSleeve` at your
+   own artwork.
 
 Nothing else has to change.
 
 ## Deploying
 
-Zero-config on Vercel — it detects Vite, builds with `npm run build`, serves
-`dist/`.
+Zero-config on Vercel — it detects Next.js and builds with `npm run build`.
 
 ```bash
 npm i -g vercel && vercel
@@ -129,13 +131,37 @@ different positions. It is a shared room, not a synchronised one.
 
 ## How it works
 
-| File | Role |
-|---|---|
-| [`src/App.jsx`](src/App.jsx) | Queue order, shuffle, keyboard shortcuts, all UI |
-| [`src/useYouTubePlayer.js`](src/useYouTubePlayer.js) | Wraps the IFrame API: load, play, seek, error recovery |
-| [`src/OfficeScene.jsx`](src/OfficeScene.jsx) | The background, hand-drawn as inline SVG |
-| [`src/playlist.js`](src/playlist.js) | The 50 tracks |
-| [`src/styles.css`](src/styles.css) | Everything visual, including the scene's animation |
+```
+app/                      App Router entry
+  layout.jsx              <html>, metadata, preconnects
+  page.jsx                server component, renders the shell
+  globals.css             imports styles/ in cascade order
+components/
+  ChillOffice.jsx         'use client' shell — arrangement only, no logic
+  chrome/                 desk clock, now-playing badge, top links
+  player/                 player pill, sleeve, seek bar, transport, iframe host
+  queue/                  playlist drawer, rows, scrim
+  scene/                  the backdrop, one component per layer
+  ui/                     icons, toast, screen-reader hint
+hooks/
+  useChillOffice.js       composes everything below into one view model
+  usePlaybackQueue.js     play order, pointer, shuffle
+  useYouTubePlayer.js     wraps the IFrame API: load, play, seek, error recovery
+  useKeyboardShortcuts.js global key bindings
+  useClock.js             ticking desk clock
+  useToast.js             transient status line
+lib/
+  playlist.js             the 50 tracks
+  constants.js            timings, sizes, error codes
+  scene-geometry.js       generated positions for dust motes and city windows
+  utils/                  time formatting, shuffle, YouTube URLs, DOM helpers
+styles/                   base, scene, chrome, player, queue, toast, responsive
+scripts/                  playlist verification tools (plain Node)
+```
+
+State lives in `hooks/`, markup lives in `components/`. The only components
+carrying `'use client'` are the ones that own state or touch the DOM —
+`ChillOffice`, `DeskClock` and `TrackPanel`.
 
 A few decisions that are easy to undo by accident:
 
@@ -143,8 +169,12 @@ A few decisions that are easy to undo by accident:
   with `display: none`. Hiding it stops playback, so it has to stay laid out.
 - **The player is constructed with its first `videoId` already set.** Built empty
   it can sit there without ever firing `onReady`, leaving a spinner forever.
-- **The colleagues are drawn before the couch**, so the backrest crops them at
-  the shoulders. Reordering those two groups makes them float in front of it.
+- **`<Colleagues />` renders before `<Couch />`**, so the backrest crops them at
+  the shoulders. SVG has no z-index — reordering those two makes the colleagues
+  float in front of the couch.
+- **The desk clock renders nothing until it mounts.** The server has no idea what
+  time it is where the visitor is, so rendering a time server-side would hydrate
+  mismatched.
 - **The record sleeve is `scale(1.4)`.** YouTube thumbnails are 16:9 with
   letterbox bars; without the scale you see the bars inside the circle.
 - Tracks YouTube refuses are marked with `⚠` in the queue and skipped

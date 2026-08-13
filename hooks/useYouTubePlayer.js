@@ -1,31 +1,24 @@
+'use client'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  EMBED_SIZE,
+  FATAL_PLAYER_ERRORS,
+  MAX_PLAYER_RETRIES,
+  PROGRESS_TICK_MS,
+} from '@/lib/constants'
+import { loadIframeApi } from '@/lib/youtube-iframe-api'
 
-// Playback runs through YouTube's IFrame player: the app holds no audio files,
-// it just drives an off-screen embed. The API script is global, so the loader is
-// shared and only ever injected once.
-let apiPromise = null
-
-function loadIframeApi() {
-  if (window.YT?.Player) return Promise.resolve()
-  if (!apiPromise) {
-    apiPromise = new Promise((resolve) => {
-      const previous = window.onYouTubeIframeAPIReady
-      window.onYouTubeIframeAPIReady = () => {
-        previous?.()
-        resolve()
-      }
-      const script = document.createElement('script')
-      script.src = 'https://www.youtube.com/iframe_api'
-      script.async = true
-      document.head.appendChild(script)
-    })
-  }
-  return apiPromise
-}
-
-// 100 = gone, 101/150 = owner disallows embedding. Nothing to retry, skip on.
-const FATAL_ERRORS = new Set([100, 101, 150])
-
+/**
+ * Drives a single off-screen YouTube embed: load, play, seek, mute and error
+ * recovery. Mount `hostRef` on a laid-out element (see `<YouTubeHost />`).
+ *
+ * @param {object}   options
+ * @param {string}   options.videoId           track to play
+ * @param {number}   [options.fallbackDuration] runtime to show until YouTube reports the real one
+ * @param {Function} [options.onEnded]          track finished on its own
+ * @param {Function} [options.onUnavailable]    track cannot be played here, called with the error code
+ */
 export function useYouTubePlayer({ videoId, fallbackDuration, onEnded, onUnavailable }) {
   const hostRef = useRef(null)
   const playerRef = useRef(null)
@@ -71,8 +64,8 @@ export function useYouTubePlayer({ videoId, fallbackDuration, onEnded, onUnavail
       loadedIdRef.current = videoIdRef.current
 
       playerRef.current = new window.YT.Player(hostRef.current, {
-        width: 356,
-        height: 200,
+        width: EMBED_SIZE.width,
+        height: EMBED_SIZE.height,
         videoId: videoIdRef.current,
         playerVars: {
           autoplay: 0,
@@ -105,12 +98,12 @@ export function useYouTubePlayer({ videoId, fallbackDuration, onEnded, onUnavail
           onError: (event) => {
             setPlaying(false)
             setBuffering(false)
-            if (FATAL_ERRORS.has(event.data)) {
+            if (FATAL_PLAYER_ERRORS.has(event.data)) {
               unavailableRef.current?.(event.data)
               return
             }
             // Transient decode/network hiccup — one retry, then move on.
-            if (retriesRef.current < 1) {
+            if (retriesRef.current < MAX_PLAYER_RETRIES) {
               retriesRef.current += 1
               playerRef.current?.playVideo?.()
             } else {
@@ -147,7 +140,7 @@ export function useYouTubePlayer({ videoId, fallbackDuration, onEnded, onUnavail
   // ---- progress ticker ----
   useEffect(() => {
     if (!playing) return
-    const id = setInterval(syncTime, 250)
+    const id = setInterval(syncTime, PROGRESS_TICK_MS)
     return () => clearInterval(id)
   }, [playing, syncTime])
 
@@ -194,7 +187,7 @@ export function useYouTubePlayer({ videoId, fallbackDuration, onEnded, onUnavail
     }
   }, [])
 
-  // Lets the play button start a track the moment the queue advances.
+  /** Lets the play button start a track the moment the queue advances. */
   const armAutoplay = useCallback(() => {
     wantPlayRef.current = true
   }, [])

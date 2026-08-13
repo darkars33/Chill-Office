@@ -5,7 +5,7 @@
 // Exits 1 if anything broke, so it can run in CI. Uploads get pulled and
 // embedding permission gets revoked, and either way the track silently dies in
 // the player — this is how you find out before your colleagues do.
-import { PLAYLIST } from '../src/playlist.js'
+import { PLAYLIST } from '../lib/playlist.js'
 
 const UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
