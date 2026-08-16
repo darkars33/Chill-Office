@@ -4,7 +4,7 @@ const base = {
   viewBox: '0 0 24 24',
   'aria-hidden': 'true',
   className:
-    'overflow-visible fill-none stroke-current [stroke-width:1.8] [stroke-linecap:round] [stroke-linejoin:round]',
+    'overflow-visible fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]',
 }
 
 export function QueueIcon() {
@@ -38,7 +38,7 @@ export function YouTubeIcon() {
         fill="currentColor"
         stroke="none"
       />
-      <path d="M10.2 9.3l4.6 2.7-4.6 2.7V9.3z" fill="#2a1a20" stroke="none" />
+      <path d="M10.2 9.3l4.6 2.7-4.6 2.7V9.3z" fill="#0b0910" stroke="none" />
     </svg>
   )
 }
@@ -69,6 +69,71 @@ export function NextIcon() {
     <svg {...base}>
       <path d="M6 6v12l9-6-9-6z" fill="currentColor" stroke="none" />
       <path d="M18 5v14" />
+    </svg>
+  )
+}
+
+export function PlayIcon() {
+  return (
+    <svg {...base}>
+      <path d="M8 5.5l11 6.5-11 6.5v-13z" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function PauseIcon() {
+  return (
+    <svg {...base}>
+      <rect x="7" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" stroke="none" />
+      <rect x="13.4" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function SearchIcon() {
+  return (
+    <svg {...base}>
+      <circle cx="11" cy="11" r="6.4" />
+      <path d="M15.8 15.8L20 20" />
+    </svg>
+  )
+}
+
+export function CloseIcon() {
+  return (
+    <svg {...base}>
+      <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />
+    </svg>
+  )
+}
+
+/** Rail: the listening room / now-playing view. */
+export function DiscIcon() {
+  return (
+    <svg {...base}>
+      <circle cx="12" cy="12" r="8.4" />
+      <circle cx="12" cy="12" r="2.2" />
+      <path d="M12 3.6a8.4 8.4 0 014.6 1.6" className="opacity-60" />
+    </svg>
+  )
+}
+
+/** Rail: the ambience-only view, where the artwork takes the whole screen. */
+export function SparkleIcon() {
+  return (
+    <svg {...base}>
+      <path d="M12 3.5l1.7 4.9 4.8 1.7-4.8 1.7-1.7 4.9-1.7-4.9L5.5 10l4.8-1.7L12 3.5z" />
+      <path d="M18.6 16.2l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" />
+    </svg>
+  )
+}
+
+/** Rail: the keyboard-shortcut sheet. */
+export function KeyboardIcon() {
+  return (
+    <svg {...base}>
+      <rect x="2.6" y="6.4" width="18.8" height="11.2" rx="2.4" />
+      <path d="M6.4 10h.01M9.6 10h.01M12.8 10h.01M16 10h.01M8 14h8" />
     </svg>
   )
 }

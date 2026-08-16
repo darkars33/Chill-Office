@@ -1,31 +1,40 @@
 @import 'tailwindcss';
 
-/* Design tokens. Everything else in the app is Tailwind utilities, so this block
-   plus the keyframes below is the whole stylesheet. */
+/* Design tokens. Everything else in the app is Tailwind utilities or Framer
+   Motion, so this block plus the keyframes below is the whole stylesheet. */
 @theme {
-  /* The palette. Several near-identical creams are deliberate — they come from
-     the original artwork and are used at different opacities. */
-  --color-ink: #100b12; /* page + stage background */
-  --color-cream: #fff6ec; /* body copy */
-  --color-linen: #fff4e8; /* secondary copy, hover washes */
-  --color-shell: #ffe8d6; /* hairline borders on glass surfaces */
-  --color-amber: #ffc98f; /* focus ring, active controls, equaliser */
-  --color-ember: #ffb055; /* paused now-playing dot */
-  --color-peach: #ffd6a8; /* clock label */
-  --color-live: #17e07f; /* playing now-playing dot */
+  /* ---------------- palette ----------------
+     Two families. `void/ink/slate` are the surfaces, darkest first; the app is
+     built as glass panels floating on the office artwork, so every surface is
+     used at partial alpha. `amber/ember/violet` are the accents — amber leads,
+     violet is the cool counterweight that keeps the warm artwork from reading
+     as sepia. */
+  --color-void: #07060b; /* page + html background */
+  --color-ink: #0b0910; /* panel base */
+  --color-slate: #14111d; /* raised surfaces, inputs */
 
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
+  --color-cream: #f5f2fc; /* primary copy */
+  --color-linen: #cec8e2; /* secondary copy, always at an opacity */
+  --color-shell: #e6dcff; /* hairline borders on glass */
 
-  /* Chrome sits directly on the artwork, so it carries its own shadow. */
-  --text-shadow-chrome: 0 2px 12px rgb(14 6 3 / 0.75);
+  --color-amber: #ffb26b; /* primary accent: active controls, progress */
+  --color-ember: #ff7a59; /* secondary accent: paused states, gradients */
+  --color-violet: #a98bff; /* tertiary accent: filters, focus, aurora */
+  --color-peach: #ffd8b0; /* small caps labels */
+  --color-live: #3ddc97; /* playing indicator */
 
-  /* Two extra breakpoints for the player pill, which reflows twice. Named rather
-     than reusing sm/md so the intent is legible at the call site. */
-  --breakpoint-pill: 561px; /* above this the chrome is no longer icon-only */
-  --breakpoint-wide: 701px; /* above this the player is at full size */
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* ---------------- overlay chrome ---------------- */
+  /* Chrome that sits directly on the artwork carries its own shadow. */
+  --text-shadow-chrome: 0 2px 14px rgb(6 3 12 / 0.8);
+
+  /* One extra breakpoint between Tailwind's sm and md, for the point where the
+     player transport stops being icon-only. Named rather than reusing sm so the
+     intent is legible at the call site. */
+  --breakpoint-pill: 561px;
+
+  /* ---------------- app chrome ---------------- */
 
   --animate-clock-blink: clock-blink 1s step-end infinite;
   @keyframes clock-blink {
@@ -39,16 +48,26 @@
     }
   }
 
-  --animate-dot-pulse: dot-pulse 2.4s ease-in-out infinite;
-  @keyframes dot-pulse {
-    0%,
-    100% {
-      transform: scale(1);
-      opacity: 1;
+  /* The aurora blobs behind the glass. Deliberately slow and prime-ish in
+     duration so the three layers never resynchronise into a visible loop. */
+  --animate-aurora: aurora 26s ease-in-out infinite alternate;
+  @keyframes aurora {
+    0% {
+      transform: translate3d(-6%, -4%, 0) scale(1);
     }
     50% {
-      transform: scale(1.28);
-      opacity: 0.75;
+      transform: translate3d(5%, 6%, 0) scale(1.18);
+    }
+    100% {
+      transform: translate3d(-3%, 8%, 0) scale(0.96);
+    }
+  }
+
+  /* Sweeps across the "Now playing" eyebrow and the skeleton rows. */
+  --animate-shimmer: shimmer 3.6s linear infinite;
+  @keyframes shimmer {
+    to {
+      background-position: 200% center;
     }
   }
 
@@ -178,14 +197,18 @@
     }
   }
 
-  /* ---------------- player + queue ---------------- */
+  /* ---------------- player ---------------- */
 
-  /* The sleeve is zoomed 1.4x to crop the letterbox bars off the YouTube
-     thumbnail, so the spin has to carry that scale through every frame. */
-  --animate-sleeve-spin: sleeve-spin 10s linear infinite;
+  /* The record turning behind the sleeve. Animates `rotate` rather than
+     `transform` so it composes with the Framer Motion offset that slides the
+     record out from behind the sleeve instead of overwriting it. */
+  --animate-sleeve-spin: sleeve-spin 22s linear infinite;
   @keyframes sleeve-spin {
+    from {
+      rotate: 0deg;
+    }
     to {
-      transform: scale(1.4) rotate(360deg);
+      rotate: 360deg;
     }
   }
 
@@ -200,7 +223,7 @@
   @keyframes equaliser {
     0%,
     100% {
-      transform: scaleY(0.4);
+      transform: scaleY(0.35);
     }
     50% {
       transform: scaleY(1);
@@ -209,57 +232,98 @@
 }
 
 @layer base {
-  /* Preflight puts `line-height: 1.5` on <html>, but the chrome and the player
-     pill were laid out against the browser default. Anything that wants a
-     tighter line still opts in with `leading-none`. */
+  /* Preflight puts `line-height: 1.5` on <html>; the chrome is laid out against
+     the browser default. Anything wanting a tighter line opts in with
+     `leading-none`. */
   body {
     line-height: normal;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* Global default rather than a per-element utility, so it covers every
      focusable thing including the ones inside the SVG scene. */
   :focus-visible {
-    outline: 2px solid var(--color-amber);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-violet);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* Every scroller in the app is an internal panel, so style them all once. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-shell) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: --alpha(var(--color-shell) / 14%);
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: --alpha(var(--color-shell) / 26%);
   }
 }
 
-/* The seek bar's track fill and thumb live in vendor pseudo-elements, which are
-   the one thing here that reads better as a named utility than as a stack of
+/* The single glass recipe every panel, pill and card is built from. Written as
+   a utility rather than a shared class string because the pieces that use it
+   also need to layer their own borders and radii on top. */
+@utility glass {
+  background:
+    linear-gradient(
+      145deg,
+      --alpha(var(--color-shell) / 8%),
+      --alpha(var(--color-shell) / 2%) 42%,
+      transparent
+    ),
+    --alpha(var(--color-ink) / 62%);
+  backdrop-filter: blur(26px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 --alpha(var(--color-shell) / 12%),
+    0 24px 60px -20px rgb(3 1 8 / 0.7);
+}
+
+/* The seek bar's fill and thumb live in vendor pseudo-elements, which are the
+   one thing here that reads better as a named utility than as a stack of
    arbitrary variants. `--progress` is set inline by <SeekBar>. */
 @utility seek-range {
   display: block;
   width: 100%;
-  height: 3px;
-  flex: 1;
+  height: 100%;
   margin: 0;
   appearance: none;
-  border-radius: calc(infinity * 1px);
+  background: transparent;
   outline: none;
   cursor: pointer;
-  background: linear-gradient(
-    to right,
-    #fff7ec 0%,
-    #fff7ec var(--progress, 0%),
-    --alpha(var(--color-linen) / 28%) var(--progress, 0%),
-    --alpha(var(--color-linen) / 28%) 100%
-  );
 
   &::-webkit-slider-thumb {
     appearance: none;
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
     border: 0;
     border-radius: calc(infinity * 1px);
-    background: #fff8ee;
-    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.12);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgb(255 178 107 / 0.24);
+    transition: transform 160ms ease;
+  }
+
+  &:hover::-webkit-slider-thumb,
+  &:focus-visible::-webkit-slider-thumb {
+    transform: scale(1.15);
   }
 
   &::-moz-range-thumb {
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
     border: 0;
     border-radius: calc(infinity * 1px);
-    background: #fff8ee;
+    background: #fff;
   }
+}
+
+/* Text that fades out at the bottom of the scrolling track list, so rows don't
+   collide with the panel edge. */
+@utility mask-fade-b {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 44px), transparent 100%);
 }

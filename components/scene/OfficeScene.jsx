@@ -20,11 +20,14 @@ import WindowFrame from '@/components/scene/WindowFrame'
  *
  * SVG has no z-index — order *is* depth, so the sequence below is the painting
  * order back to front. Moving a piece moves it in space.
+ *
+ * Positioning is the caller's job — see `<Ambience />`, which owns the whole
+ * background stack and fades this in and out between the two views.
  */
 export default function OfficeScene() {
   return (
     <svg
-      className="fixed inset-0 -z-[1] block size-full"
+      className="absolute inset-0 block size-full"
       viewBox="0 0 1600 900"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"

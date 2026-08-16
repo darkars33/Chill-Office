@@ -19,8 +19,11 @@ export function useChillOffice(playlist = PLAYLIST) {
   const queue = usePlaybackQueue(playlist)
   const { message: toast, notify } = useToast()
 
+  /** Only used below `lg`, where the track list is a sheet rather than a column. */
   const [queueOpen, setQueueOpen] = useState(false)
-  /** Video ids YouTube refused, flagged in the drawer so the list stays honest. */
+  /** `true` hands the screen to the office artwork and shrinks the player. */
+  const [ambience, setAmbience] = useState(false)
+  /** Video ids YouTube refused, flagged in the list so it stays honest. */
   const [brokenIds, setBrokenIds] = useState(() => new Set())
 
   const { track, step, jumpToTrack } = queue
@@ -64,11 +67,13 @@ export function useChillOffice(playlist = PLAYLIST) {
     [playing, armAutoplay, step],
   )
 
-  /** Picking a row in the drawer always starts playback. */
+  /** Picking a row in the track list always starts playback. */
   const jumpTo = useCallback(
     (playlistIndex) => {
       armAutoplay()
       jumpToTrack(playlistIndex)
+      // On small screens the list is a sheet over the player — get out of the way.
+      setQueueOpen(false)
     },
     [armAutoplay, jumpToTrack],
   )
@@ -87,6 +92,13 @@ export function useChillOffice(playlist = PLAYLIST) {
   const closeQueue = useCallback(() => setQueueOpen(false), [])
   const toggleQueue = useCallback(() => setQueueOpen((open) => !open), [])
 
+  /** Switching views closes the sheet, which would otherwise cover the artwork. */
+  const selectView = useCallback((next) => {
+    setAmbience(next)
+    setQueueOpen(false)
+  }, [])
+  const toggleAmbience = useCallback(() => selectView(!ambience), [selectView, ambience])
+
   useKeyboardShortcuts({
     onTogglePlay: player.toggle,
     onSeekForward: () => player.nudge(SEEK_STEP_SECONDS),
@@ -96,6 +108,7 @@ export function useChillOffice(playlist = PLAYLIST) {
     onToggleMute: toggleMute,
     onToggleShuffle: toggleShuffle,
     onToggleQueue: toggleQueue,
+    onToggleAmbience: toggleAmbience,
     onCloseQueue: closeQueue,
   })
 
@@ -107,8 +120,10 @@ export function useChillOffice(playlist = PLAYLIST) {
     toast,
     brokenIds,
     queueOpen,
+    ambience,
     openQueue,
     closeQueue,
+    selectView,
     skip,
     jumpTo,
     toggleShuffle,

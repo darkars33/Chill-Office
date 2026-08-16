@@ -1,23 +1,20 @@
-import { NextIcon, PreviousIcon, ShuffleIcon } from '@/components/ui/Icons'
+'use client'
+
+import { AnimatePresence, motion } from 'motion/react'
+import {
+  NextIcon,
+  PauseIcon,
+  PlayIcon,
+  PreviousIcon,
+  ShuffleIcon,
+} from '@/components/ui/Icons'
+
+const spring = { type: 'spring', stiffness: 520, damping: 30 }
 
 const iconButton = [
-  'relative grid h-[34px] w-9 flex-none place-items-center rounded-lg border-0 p-0 pill:w-[30px]',
-  'cursor-pointer bg-transparent text-cream/80',
-  'transition-[color,transform] duration-[160ms]',
-  'hover:text-white focus-visible:text-white active:scale-86',
-  'aria-pressed:text-amber',
+  'relative grid size-10 place-items-center rounded-full border-0 bg-transparent p-0',
+  'cursor-pointer text-cream/72 transition-colors duration-200 hover:text-cream',
   '[&>svg]:size-[19px]',
-].join(' ')
-
-/** The dot under the shuffle button while it is on. */
-const onDot =
-  "after:absolute after:bottom-[3px] after:size-1 after:rounded-full after:bg-current after:content-['']"
-
-const playButton = [
-  'grid size-11 flex-none place-items-center rounded-full border-0 p-0',
-  'cursor-pointer bg-[#fffaf2] text-[#1e1219] shadow-[0_7px_18px_rgba(24,8,3,0.28)]',
-  'transition-[transform,background-color] duration-[160ms]',
-  'hover:scale-105 hover:bg-white focus-visible:scale-105 focus-visible:bg-white active:scale-94',
 ].join(' ')
 
 /** Shuffle, previous, play/pause, next. */
@@ -26,6 +23,7 @@ export default function TransportControls({
   ready,
   buffering,
   shuffle,
+  size = 'lg',
   onToggle,
   onNext,
   onPrevious,
@@ -33,68 +31,111 @@ export default function TransportControls({
 }) {
   // Show the spinner while the embed boots, and while it rebuffers from a stop.
   const loading = !ready || (buffering && !playing)
+  const play = size === 'lg' ? 'size-16 [&_svg]:size-7' : 'size-12 [&_svg]:size-6'
 
   return (
-    <div
-      className={[
-        'flex items-center justify-center',
-        // Drops to its own full-width row on the narrowest layout.
-        'col-span-2 gap-[clamp(10px,4vw,22px)] pill:col-auto pill:gap-1 wide:gap-2',
-      ].join(' ')}
-    >
-      <button
+    <div className="flex items-center justify-center gap-1.5 sm:gap-3">
+      <motion.button
         type="button"
-        className={shuffle ? `${iconButton} ${onDot}` : iconButton}
+        className={`${iconButton} ${shuffle ? 'text-amber' : ''}`}
         onClick={onToggleShuffle}
         aria-pressed={shuffle}
         aria-label="Shuffle"
         title="Shuffle (S)"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.88 }}
+        transition={spring}
       >
         <ShuffleIcon />
-      </button>
+        <AnimatePresence>
+          {shuffle ? (
+            <motion.span
+              className="absolute bottom-[3px] size-[3px] rounded-full bg-amber"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={spring}
+            />
+          ) : null}
+        </AnimatePresence>
+      </motion.button>
 
-      <button
+      <motion.button
         type="button"
         className={iconButton}
         onClick={onPrevious}
         aria-label="Previous track"
         title="Previous (Shift + ←)"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.88, x: -3 }}
+        transition={spring}
       >
         <PreviousIcon />
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
         type="button"
-        className={playButton}
+        className={[
+          'relative grid flex-none place-items-center rounded-full border-0 p-0',
+          'cursor-pointer bg-[linear-gradient(140deg,#fffaf4,#ffd9b8)] text-void',
+          'shadow-[0_14px_34px_-10px_rgba(255,140,80,0.8),inset_0_1px_0_rgba(255,255,255,0.9)]',
+          play,
+        ].join(' ')}
         onClick={onToggle}
         aria-pressed={playing}
         aria-label={playing ? 'Pause' : 'Play'}
         title="Play / pause (Space)"
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.93 }}
+        transition={spring}
       >
-        {loading ? (
-          <span
-            className="size-[15px] animate-loader-spin rounded-full border-2 border-[#1e1219]/25 border-t-[#1e1219]"
+        {/* A ring that breathes out of the button while it is playing. */}
+        {playing && !loading ? (
+          <motion.span
+            className="pointer-events-none absolute inset-0 rounded-full border border-amber/60"
+            animate={{ scale: [1, 1.42], opacity: [0.7, 0] }}
+            transition={{ duration: 2.4, ease: 'easeOut', repeat: Infinity }}
             aria-hidden="true"
           />
-        ) : playing ? (
-          <span className="h-[15px] w-3 border-x-4 border-x-current" aria-hidden="true" />
-        ) : (
-          <span
-            className="ml-[3px] size-0 border-y-[7px] border-l-[11px] border-y-transparent border-l-current"
-            aria-hidden="true"
-          />
-        )}
-      </button>
+        ) : null}
 
-      <button
+        <AnimatePresence mode="wait" initial={false}>
+          {loading ? (
+            <motion.span
+              key="loading"
+              className="size-[18px] animate-loader-spin rounded-full border-2 border-void/20 border-t-void/80"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              aria-hidden="true"
+            />
+          ) : (
+            <motion.span
+              key={playing ? 'pause' : 'play'}
+              className="grid place-items-center"
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.6 }}
+              transition={{ duration: 0.14 }}
+            >
+              {playing ? <PauseIcon /> : <PlayIcon />}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.button>
+
+      <motion.button
         type="button"
         className={iconButton}
         onClick={onNext}
         aria-label="Next track"
         title="Next (Shift + →)"
+        whileHover={{ scale: 1.12 }}
+        whileTap={{ scale: 0.88, x: 3 }}
+        transition={spring}
       >
         <NextIcon />
-      </button>
+      </motion.button>
     </div>
   )
 }

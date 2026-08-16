@@ -19,6 +19,8 @@ export function usePlaybackQueue(playlist) {
 
   const trackIndex = order[pointer] ?? 0
   const track = playlist[trackIndex]
+  /** What the queue will play next, for the "up next" line under the transport. */
+  const nextTrack = playlist[order[(pointer + 1) % order.length] ?? 0]
 
   /** Move `delta` places through the queue, wrapping at both ends. */
   const step = useCallback(
@@ -61,6 +63,7 @@ export function usePlaybackQueue(playlist) {
     pointer,
     trackIndex,
     track,
+    nextTrack,
     shuffle,
     position,
     step,

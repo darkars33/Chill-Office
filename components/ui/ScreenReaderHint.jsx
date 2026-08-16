@@ -1,9 +1,10 @@
-/** The shortcut list, for screen readers only. */
+import { SHORTCUTS } from '@/lib/constants'
+
+/** The shortcut list, for screen readers. The rail shows the same list visually. */
 export default function ScreenReaderHint() {
   return (
     <p className="sr-only">
-      Keyboard: space plays or pauses, arrow keys seek, shift and arrow keys change track, S
-      shuffles, M mutes, Q opens the playlist.
+      Keyboard shortcuts: {SHORTCUTS.map(([keys, what]) => `${keys} — ${what}`).join('. ')}.
     </p>
   )
 }

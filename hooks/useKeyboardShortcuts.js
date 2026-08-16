@@ -16,6 +16,7 @@ import { isTypingTarget } from '@/lib/utils/dom'
  * @param {Function} [handlers.onToggleMute]     M
  * @param {Function} [handlers.onToggleShuffle]  S
  * @param {Function} [handlers.onToggleQueue]    Q
+ * @param {Function} [handlers.onToggleAmbience] V
  * @param {Function} [handlers.onCloseQueue]     escape
  */
 export function useKeyboardShortcuts(handlers) {
@@ -56,6 +57,10 @@ export function useKeyboardShortcuts(handlers) {
         case 'q':
         case 'Q':
           on.onToggleQueue?.()
+          break
+        case 'v':
+        case 'V':
+          on.onToggleAmbience?.()
           break
         case 'Escape':
           on.onCloseQueue?.()

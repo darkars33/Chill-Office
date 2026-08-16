@@ -1,21 +1,29 @@
-/** Transient status line above the player. Stays mounted so it can animate out. */
+'use client'
+
+import { AnimatePresence, motion } from 'motion/react'
+
+/** Transient status line, centred above the player. */
 export default function Toast({ message }) {
   return (
     <div
-      className={[
-        'pointer-events-none fixed left-1/2 z-4 -translate-x-1/2 rounded-full border',
-        'border-shell/20 bg-[#180f14]/90 px-[15px] py-2 backdrop-blur-[10px]',
-        'text-[12px] [font-weight:650] whitespace-nowrap',
-        'transition-[opacity,transform] duration-[220ms]',
-        // Parked above the player, which itself sits higher on wider screens.
-        'bottom-[calc(12px+env(safe-area-inset-bottom)+128px)]',
-        'pill:bottom-[calc(clamp(18px,6vh,54px)+112px)]',
-        message ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
-      ].join(' ')}
+      className="pointer-events-none fixed inset-x-0 top-[calc(74px+env(safe-area-inset-top))] z-30 flex justify-center lg:top-24"
       role="status"
       aria-live="polite"
     >
-      {message}
+      <AnimatePresence>
+        {message ? (
+          <motion.p
+            key={message}
+            className="glass rounded-full border border-shell/14 px-4 py-2 text-[12px] font-semibold whitespace-nowrap text-cream"
+            initial={{ opacity: 0, y: -14, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 460, damping: 32 }}
+          >
+            {message}
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }
