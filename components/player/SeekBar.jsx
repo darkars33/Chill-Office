@@ -6,9 +6,10 @@ export default function SeekBar({ value, max, isScrubbing, onScrub, onCommit }) 
   const progress = max > 0 ? Math.min(100, (value / max) * 100) : 0
 
   return (
-    <div className="scrub" style={{ '--progress': `${progress}%` }}>
+    <div className="flex h-2.5 cursor-pointer items-center" style={{ '--progress': `${progress}%` }}>
       <input
         type="range"
+        className="seek-range"
         min="0"
         max={Math.max(1, Math.floor(max))}
         step="1"

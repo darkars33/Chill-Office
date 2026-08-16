@@ -6,7 +6,7 @@ export default function Colleagues() {
   return (
     <g fill="#120b11">
       {/* left: sunk back into the cushion, watching the light go */}
-      <g className="colleague">
+      <g className="animate-colleague-breathe [transform-origin:672px_700px] motion-reduce:animate-none">
         <path d="M584 700q6-152 88-152t88 152z" />
         <circle cx="672" cy="504" r="37" />
         {/* rim light from the window */}
@@ -21,7 +21,7 @@ export default function Colleagues() {
       </g>
 
       {/* right: hair tied back, head tipped toward the conversation */}
-      <g className="colleague colleague-b">
+      <g className="animate-colleague-breathe [transform-origin:916px_700px] [animation-duration:7.8s] [animation-delay:-1.4s] motion-reduce:animate-none">
         <path d="M832 700q6-146 84-146t84 146z" />
         <g transform="rotate(-8 916 520)">
           <circle cx="916" cy="512" r="35" />

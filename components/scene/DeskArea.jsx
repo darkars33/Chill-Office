@@ -9,7 +9,15 @@ export default function DeskArea() {
       {/* monitor */}
       <rect x="70" y="352" width="146" height="98" rx="7" fill="#180f16" />
       <rect x="78" y="360" width="130" height="82" rx="4" fill="#2b4a52" />
-      <rect className="screen-glow" x="78" y="360" width="130" height="82" rx="4" fill="#6fd0d8" />
+      <rect
+        className="animate-screen-glow opacity-[0.16] motion-reduce:animate-none"
+        x="78"
+        y="360"
+        width="130"
+        height="82"
+        rx="4"
+        fill="#6fd0d8"
+      />
       {/* a few lines of code nobody will read till Monday */}
       <g fill="#0e1a1e" opacity="0.5">
         <rect x="86" y="370" width="62" height="4" rx="2" />
@@ -18,7 +26,15 @@ export default function DeskArea() {
         <rect x="94" y="406" width="52" height="4" rx="2" />
         <rect x="86" y="418" width="84" height="4" rx="2" />
       </g>
-      <rect className="cursor" x="152" y="406" width="7" height="4" rx="2" fill="#0e1a1e" />
+      <rect
+        className="animate-cursor-blink motion-reduce:animate-none"
+        x="152"
+        y="406"
+        width="7"
+        height="4"
+        rx="2"
+        fill="#0e1a1e"
+      />
       <rect x="132" y="450" width="22" height="18" fill="#180f16" />
       <rect x="112" y="466" width="62" height="7" rx="3" fill="#221720" />
       {/* keyboard + mouse */}

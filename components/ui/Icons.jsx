@@ -1,6 +1,11 @@
-// Every icon in the app. Stroke width, size and linecaps come from CSS
-// (`.top-links svg`, `.icon-btn svg`); the filled shapes opt out per-path.
-const base = { viewBox: '0 0 24 24', 'aria-hidden': 'true' }
+// Every icon in the app. The shared stroke treatment lives here; size comes from
+// the parent (`[&>svg]:size-*` on the buttons), and filled shapes opt out per-path.
+const base = {
+  viewBox: '0 0 24 24',
+  'aria-hidden': 'true',
+  className:
+    'overflow-visible fill-none stroke-current [stroke-width:1.8] [stroke-linecap:round] [stroke-linejoin:round]',
+}
 
 export function QueueIcon() {
   return (

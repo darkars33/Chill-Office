@@ -8,7 +8,7 @@ export default function DustMotes() {
       {MOTES.map((m, i) => (
         <circle
           key={i}
-          className="mote"
+          className="animate-mote-float opacity-0 motion-reduce:animate-none motion-reduce:opacity-30"
           cx={m.x}
           cy={m.y}
           r={m.r}

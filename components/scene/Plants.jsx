@@ -4,7 +4,10 @@ export default function Plants() {
     <g>
       {/* left monstera, shifted clear of the desk */}
       <g transform="translate(74 0)">
-        <g className="plant-sway" style={{ transformOrigin: '292px 660px' }}>
+        <g
+          className="animate-plant-sway motion-reduce:animate-none"
+          style={{ transformOrigin: '292px 660px' }}
+        >
           <g fill="#22301f">
             <ellipse cx="256" cy="512" rx="42" ry="26" transform="rotate(-26 256 512)" />
             <ellipse cx="330" cy="496" rx="44" ry="27" transform="rotate(20 330 496)" />
@@ -23,7 +26,10 @@ export default function Plants() {
       </g>
 
       {/* right rubber plant */}
-      <g className="plant-sway plant-sway-slow" style={{ transformOrigin: '1420px 664px' }}>
+      <g
+        className="animate-plant-sway [animation-duration:12s] [animation-direction:alternate-reverse] motion-reduce:animate-none"
+        style={{ transformOrigin: '1420px 664px' }}
+      >
         <g fill="#1f2b1e">
           <ellipse cx="1392" cy="592" rx="30" ry="19" transform="rotate(-30 1392 592)" />
           <ellipse cx="1452" cy="580" rx="31" ry="19" transform="rotate(26 1452 580)" />

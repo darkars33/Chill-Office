@@ -7,7 +7,9 @@ classics from the 70s, 80s and 90s on rotation.
 Built in the spirit of [Tapri Tapes](https://chai-tapri-wala.vercel.app/), moved
 indoors.
 
-Built with Next.js (App Router) and React.
+Built with Next.js (App Router), React and Tailwind CSS. `next dev` and
+`next build` both run on Turbopack, which is the default bundler in Next.js 16 —
+no flag needed.
 
 ```bash
 npm install
@@ -135,7 +137,7 @@ different positions. It is a shared room, not a synchronised one.
 app/                      App Router entry
   layout.jsx              <html>, metadata, preconnects
   page.jsx                server component, renders the shell
-  globals.css             imports styles/ in cascade order
+  globals.css             Tailwind entry: theme tokens, keyframes, seek-bar utility
 components/
   ChillOffice.jsx         'use client' shell — arrangement only, no logic
   chrome/                 desk clock, now-playing badge, top links
@@ -155,9 +157,15 @@ lib/
   constants.js            timings, sizes, error codes
   scene-geometry.js       generated positions for dust motes and city windows
   utils/                  time formatting, shuffle, YouTube URLs, DOM helpers
-styles/                   base, scene, chrome, player, queue, toast, responsive
 scripts/                  playlist verification tools (plain Node)
+postcss.config.mjs        Tailwind's PostCSS plugin, picked up by Turbopack
 ```
+
+Styling is Tailwind utilities in the components. `app/globals.css` holds only
+what utilities cannot express: the palette and font tokens, the two extra
+breakpoints (`pill` at 561px and `wide` at 701px, where the player pill reflows),
+every `@keyframes` used by the scene, and the `seek-range` utility for the range
+input's vendor pseudo-elements.
 
 State lives in `hooks/`, markup lives in `components/`. The only components
 carrying `'use client'` are the ones that own state or touch the DOM —

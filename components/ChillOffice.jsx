@@ -34,7 +34,7 @@ export default function ChillOffice() {
   } = useChillOffice()
 
   return (
-    <main className="stage">
+    <main className="relative isolate min-h-dvh overflow-hidden bg-ink">
       <OfficeScene />
 
       <DeskClock />

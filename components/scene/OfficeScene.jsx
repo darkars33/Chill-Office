@@ -24,7 +24,7 @@ import WindowFrame from '@/components/scene/WindowFrame'
 export default function OfficeScene() {
   return (
     <svg
-      className="scene"
+      className="fixed inset-0 -z-[1] block size-full"
       viewBox="0 0 1600 900"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden="true"

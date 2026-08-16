@@ -47,7 +47,11 @@ export default function CityView() {
         {CITY_WINDOWS.map((w, i) => (
           <rect
             key={i}
-            className={w.lit ? 'city-window is-lit' : 'city-window'}
+            className={
+              w.lit
+                ? 'animate-window-flicker opacity-[0.18] motion-reduce:animate-none'
+                : 'opacity-[0.18]'
+            }
             x={w.x}
             y={w.y}
             width="7"
@@ -63,7 +67,13 @@ export default function CityView() {
       <rect x="318" y="430" width="980" height="118" fill="#ff9d5c" opacity="0.22" />
 
       {/* birds heading home */}
-      <g className="birds" stroke="#3a2436" strokeWidth="2.4" fill="none" strokeLinecap="round">
+      <g
+        className="animate-birds-drift opacity-65 motion-reduce:animate-none"
+        stroke="#3a2436"
+        strokeWidth="2.4"
+        fill="none"
+        strokeLinecap="round"
+      >
         <path d="M470 208l9-7 9 7" />
         <path d="M508 190l7-6 7 6" />
         <path d="M542 214l8-6 8 6" />

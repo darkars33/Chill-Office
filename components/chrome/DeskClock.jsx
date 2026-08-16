@@ -13,13 +13,24 @@ export default function DeskClock() {
   const { hh, mm, meridiem, shift } = clockParts(now)
 
   return (
-    <div className="desk-clock">
-      <time dateTime={now.toISOString()}>
+    <div
+      className={[
+        'fixed z-2 flex flex-col gap-[3px] font-bold leading-none text-shadow-chrome',
+        'top-[calc(14px+env(safe-area-inset-top))] left-[14px]',
+        'pill:top-[clamp(18px,3vw,30px)] pill:left-[clamp(18px,3vw,32px)]',
+      ].join(' ')}
+    >
+      <time
+        dateTime={now.toISOString()}
+        className="text-[13px] tracking-[-0.02em] text-cream/95 tabular-nums pill:text-[15px]"
+      >
         {hh}
-        <span className="clock-colon">:</span>
+        <span className="inline-block animate-clock-blink motion-reduce:animate-none">:</span>
         {mm} {meridiem}
       </time>
-      <small>{shift}</small>
+      <small className="text-[10px] font-semibold tracking-[0.06em] text-peach/78 uppercase pill:text-[11px]">
+        {shift}
+      </small>
     </div>
   )
 }

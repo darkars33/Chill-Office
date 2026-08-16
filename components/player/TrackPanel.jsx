@@ -21,10 +21,20 @@ export default function TrackPanel({ track, time, duration, position, onSeek }) 
   }
 
   return (
-    <div className="track">
-      <div className="track-copy">
-        <strong title={track.title}>{track.title}</strong>
-        <span title={`${track.singers} · ${track.film} (${track.year})`}>{track.singers}</span>
+    <div className="flex min-w-0 flex-col justify-center self-stretch">
+      <div className="mb-[5px] flex min-w-0 flex-col gap-0.5 wide:mb-2">
+        <strong
+          title={track.title}
+          className="truncate text-[13px] [font-weight:750] tracking-[-0.01em] wide:text-[14px]"
+        >
+          {track.title}
+        </strong>
+        <span
+          title={`${track.singers} · ${track.film} (${track.year})`}
+          className="truncate text-[11px] text-linen/74"
+        >
+          {track.singers}
+        </span>
       </div>
 
       <SeekBar
@@ -35,9 +45,9 @@ export default function TrackPanel({ track, time, duration, position, onSeek }) 
         onCommit={commit}
       />
 
-      <div className="times">
+      <div className="mt-[3px] flex gap-1 text-[10px] leading-none text-linen/62 tabular-nums">
         <span>{formatClock(shown)}</span>
-        <span className="spacer">{position}</span>
+        <span className="ml-auto">{position}</span>
         <span>{formatClock(total)}</span>
       </div>
     </div>

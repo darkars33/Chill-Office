@@ -28,14 +28,16 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="min-h-full w-full bg-ink">
       <head>
         {/* Playback and album art come from YouTube — warm the connections early. */}
         <link rel="preconnect" href="https://www.youtube.com" />
         <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="" />
         <link rel="preconnect" href="https://www.googlevideo.com" crossOrigin="" />
       </head>
-      <body>{children}</body>
+      <body className="min-h-full w-full overflow-hidden bg-ink font-sans text-cream">
+        {children}
+      </body>
     </html>
   )
 }
