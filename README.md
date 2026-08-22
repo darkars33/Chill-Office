@@ -1,71 +1,107 @@
-# Chill Office
+# Open Floor
 
-A single-screen music room for the end of the workday: the office at golden hour,
-two colleagues on the couch, chai going cold on the side table, and 50 Hindi-film
-classics from the 70s, 80s and 90s on rotation.
+A digital office where everybody is anonymously listening to music.
 
-Built in the spirit of [Tapri Tapes](https://chai-tapri-wala.vercel.app/), moved
-indoors.
+You walk in and you are standing on a floor with other people on it — figures at
+different distances, headphones on, name plates under them, one of them saying
+something across the room. In the middle is the record everybody is hearing. Down
+the hall are four more floors with their own crowds.
 
-Built with Next.js (App Router), React and Tailwind CSS. `next dev` and
-`next build` both run on Turbopack, which is the default bundler in Next.js 16 —
-no flag needed.
+Nobody has an account. Nobody has a name. Nothing anybody says is kept.
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
 ```
 
-## About the music
+Next.js (App Router), React, Tailwind CSS v4 and Motion. `next dev` and
+`next build` both run on Turbopack, the default bundler in Next.js 16.
 
-**The songs are not downloaded, and they are not stored in this repo.** All 50
-tracks stream from YouTube through its official IFrame Player, which is the same
-approach the original site takes. The app holds a list of video IDs; YouTube does
-the serving.
+---
 
-That is deliberate. Ripping 50 Bollywood songs to MP3 would mean redistributing
-music owned by Saregama, T-Series, YRF, Tips and others, which is not something
-you want sitting in a repo — let alone deployed on a company URL. Streaming the
-rights-holders' own uploads keeps the plays legitimate and the artists in the
-payout loop.
+## ⚠ Read this first: the people are not real yet
 
-Practical consequences worth knowing:
+**There is no realtime backend.** Every person, message, reaction and movement in
+the building is generated locally in your own browser tab. Nobody else can see
+them, and they cannot see you.
 
-- **Playback needs a network connection**, and it needs YouTube to be reachable.
-  On a locked-down corporate network that blocks `youtube.com` or
-  `googlevideo.com`, nothing will play.
-- **The first play has to be a click.** Browsers block autoplay with sound, so
-  the player loads paused. This is not a bug.
-- **Uploads can vanish.** Videos get deleted and embed permission gets revoked.
-  See [Keeping the playlist alive](#keeping-the-playlist-alive).
+That simulation lives in exactly one file — [`lib/presence/simulated.js`](lib/presence/simulated.js)
+— behind the seam documented in [`lib/presence/index.js`](lib/presence/index.js).
+Everything else talks to that seam and nothing else, so swapping in a real
+transport (a WebSocket room, Supabase Realtime, PartyKit, Liveblocks) is one
+module, not a rewrite:
 
-If you would rather play files you own, see [Using your own audio
-files](#using-your-own-audio-files).
+```js
+const client = createPresenceClient({ room, self })
+client.subscribe(state => …)   // { total, people[], messages[], reactions[], activity[], whispers{} }
+client.say(text)
+client.react(emoji)
+client.openWhisper(peerId) / sendWhisper(peerId, text) / closeWhisper(peerId)
+client.destroy()
+```
 
-### How the 50 were chosen
+While the simulation is the implementation, `IS_SIMULATED` is `true` and every
+screen shows a **SIMULATED** badge. **Do not clear that flag while this is still
+the implementation.** Showing invented people to a real person as though they
+were in the room is the product telling a lie, not a placeholder. Replace the
+module; do not un-flag it.
 
-Each entry was resolved by searching YouTube and then verified three ways: the
-video exists, it is public, and its owner allows embedding (`playableInEmbed`).
-Ranking preferred uploads from the labels that actually own this catalogue, and
-rejected covers, remixes, mashups and hour-long jukeboxes.
-
-Then the list was read by hand, which caught things the score did not — a search
-for *Bachna Ae Haseeno* resolving to the 2008 Ranbir Kapoor remake instead of
-Kishore's 1977 original, a *Raja Hindustani* query landing on a song from a
-different film entirely, and a 14-minute mashup masquerading as a single.
-
-Where it landed:
+## The building
 
 | | |
 |---|---|
-| 1970s | 20 tracks |
-| 1980s | 12 tracks |
-| 1990s | 18 tracks |
-| From label channels | 42 of 50 |
+| **Listening Room** | The main floor. Headphones on, nobody talking much. |
+| **The Lounge** | Sofas, chatter, somebody always has an opinion. |
+| **Quiet Room** | Small rooms with the door shut. Two or three people, tops. |
+| **Late Night** | The long ones. Lights down, nobody leaving. |
+| **Trending Floor** | Wherever the crowd went. Loud, full, hard to hear yourself. |
 
-Kishore Kumar, Rafi, Lata, Asha, Mukesh, Kumar Sanu, Udit Narayan, Alka Yagnik,
-S. P. Balasubrahmanyam; R.D. Burman through Bappi Lahiri to A. R. Rahman. The
-full list is in [`lib/playlist.js`](lib/playlist.js).
+A song *is* a room, and every room stands on one of those floors — derived from
+the track's own length, decade and crowd in [`lib/areas.js`](lib/areas.js), so the
+plan is fixed and you can learn your way around.
+
+| Route | What it is |
+|---|---|
+| `/` | The floor you walked in on. No landing page; the building is the product. |
+| `/room/[id]` | The same workspace, standing in that room |
+| `/directory` | The whole building: five floors, fifty doorways |
+
+Playback lives above the router in [`providers/`](providers), so walking out to
+the directory and back never interrupts the music.
+
+## How the room is built
+
+The depth illusion is the whole design, and it comes from one number.
+
+Everything standing on the floor has an `(x, depth)` spot. `depth` runs 0 at the
+back wall to 1 at the near edge, and it drives four things at once — vertical
+position, scale, haze, and paint order. That is why somebody at the front walks
+*in front of* the album art and the couch, and why a flat `<div>` reads as a room.
+It all lives in [`lib/floor-space.js`](lib/floor-space.js), shared by the people
+and the furniture so neither has to know about the other.
+
+- **People** ([`Floor.jsx`](components/office/Floor.jsx)) are positioned by a
+  single `requestAnimationFrame` loop that eases each figure toward its target,
+  so they walk rather than teleport. Motion only handles arrival and departure.
+- **Figures** ([`Persona.jsx`](components/office/Persona.jsx)) are silhouettes
+  with no faces — anonymity has to survive being depicted. What varies is
+  posture, hair, headphones, and whether they brought a mug or a laptop.
+- **Furniture** ([`Props.jsx`](components/office/Props.jsx)) is hand-placed in
+  the same depth space. Desks at the back, couch at the front, plants in the
+  corners.
+- **Everything scales to the stage** via `fitFor()`, so a phone gets a small
+  room rather than a cropped one.
+
+## Colour
+
+Warm charcoal, wood and paper. The accents are deliberately low chroma
+(`ACCENT_CHROMA = 0.075` in [`lib/palette.js`](lib/palette.js)) and restricted to
+four bands — clay, brass, moss, dusty slate blue. The same hue at 0.18 is neon
+and at 0.075 is a paint chip; that one number is the difference between a room
+and a dashboard.
+
+The room's hue is a registered `@property`, so it *interpolates* — one CSS
+transition warms or cools the entire floor as you walk into another space.
 
 ## Controls
 
@@ -73,125 +109,100 @@ full list is in [`lib/playlist.js`](lib/playlist.js).
 |---|---|
 | `Space` | Play / pause |
 | `←` `→` | Seek 5 seconds |
-| `Shift` + `←` `→` | Previous / next track |
-| `S` | Shuffle |
-| `M` | Mute |
-| `Q` | Open the queue |
-| `Esc` | Close the queue |
+| `Shift` + `←` `→` | Previous / next room |
+| `/` | Say something to the room |
+| `R` | Walk somewhere else |
+| `D` | Open the directory |
+| `Q` | Queue |
+| `Esc` | Close whatever is open |
 
-Clicking any row in the queue jumps straight to that track.
+Hovering somebody stops them and opens their card. Clicking any handle — on the
+floor or in the conversation — starts a whisper.
 
-## Keeping the playlist alive
+---
+
+## About the music
+
+**The songs are not downloaded, and they are not stored in this repo.** All 50
+tracks stream from YouTube through its official IFrame Player. The app holds a
+list of video IDs; YouTube does the serving.
+
+That is deliberate. Ripping 50 Bollywood songs to MP3 would mean redistributing
+music owned by Saregama, T-Series, YRF, Tips and others. Streaming the
+rights-holders' own uploads keeps the plays legitimate and the artists in the
+payout loop.
+
+- **Playback needs a network connection** and needs YouTube to be reachable.
+- **The first play has to be a click.** Browsers block autoplay with sound.
+- **Uploads can vanish.** See below.
+
+Each entry was resolved by searching YouTube and verified three ways: the video
+exists, it is public, and its owner allows embedding. Ranking preferred label
+uploads and rejected covers, remixes and hour-long jukeboxes; the list was then
+read by hand, which caught a *Bachna Ae Haseeno* resolving to the 2008 remake and
+a 14-minute mashup masquerading as a single. Full list in
+[`lib/playlist.js`](lib/playlist.js).
 
 ```bash
-npm run check:playlist
-```
-
-Re-tests all 50 video IDs and reports anything that has been removed, had
-embedding disabled, or become age-restricted. Exits non-zero if something broke,
-so it can run on a schedule.
-
-To find a replacement:
-
-```bash
+npm run check:playlist                                       # re-test all 50
 node scripts/resolve-playlist.mjs "Chaiyya Chaiyya|Dil Se|1998|Sukhwinder Singh"
 ```
 
-It searches, verifies the result is embeddable, and prints an entry ready to
-paste into `lib/playlist.js`. Use the same command to add songs.
-
 Both scripts talk to youtube.com one request at a time with backoff. They are
-slow on purpose — going faster gets you throttled and the results get worse.
-
-## Using your own audio files
-
-If you have licensed files, or a locked-down network, swap the YouTube player for
-an `<audio>` element:
-
-1. Put the files in `public/audio/`.
-2. Add a `src` to each entry in `lib/playlist.js` (`src: '/audio/track.mp3'`).
-3. Replace `hooks/useYouTubePlayer.js` with a hook wrapping one
-   `HTMLAudioElement`. It needs to expose the same shape the UI already consumes
-   — `playing`, `time`, `duration`, `play`, `pause`, `toggle`, `seek`, `nudge`,
-   `toggleMute` — so `useChillOffice` keeps working. Point `AlbumSleeve` at your
-   own artwork.
-
-Nothing else has to change.
+slow on purpose.
 
 ## Deploying
 
-Zero-config on Vercel — it detects Next.js and builds with `npm run build`.
+Zero-config on Vercel. The YouTube embed reports the deployed origin, so it works
+on any host without setup.
 
-```bash
-npm i -g vercel && vercel
-```
+Playback is per visitor: two people in the same room hear the same track from
+different positions. Making a room genuinely synchronised is part of the same job
+as making presence real.
 
-The YouTube embed reports the deployed origin, so it works on any host without
-setup. One thing worth deciding before you share the link: playback is per
-visitor, so two colleagues on the same page hear the same playlist from
-different positions. It is a shared room, not a synchronised one.
-
-## How it works
+## Layout
 
 ```
-app/                      App Router entry
-  layout.jsx              <html>, metadata, preconnects
-  page.jsx                server component, renders the shell
-  globals.css             Tailwind entry: theme tokens, keyframes, seek-bar utility
-components/
-  ChillOffice.jsx         'use client' shell — arrangement only, no logic
-  chrome/                 desk clock, now-playing badge, top links
-  player/                 player pill, sleeve, seek bar, transport, iframe host
-  queue/                  playlist drawer, rows, scrim
-  scene/                  the backdrop, one component per layer
-  ui/                     icons, toast, screen-reader hint
-hooks/
-  useChillOffice.js       composes everything below into one view model
-  usePlaybackQueue.js     play order, pointer, shuffle
-  useYouTubePlayer.js     wraps the IFrame API: load, play, seek, error recovery
-  useKeyboardShortcuts.js global key bindings
-  useClock.js             ticking desk clock
-  useToast.js             transient status line
+app/
+  layout.jsx            <html>, metadata, <Providers>
+  globals.css           the design system: warm tokens, the four surfaces, @property --hue
+  page.jsx              the floor you walk in on
+  room/[id]/page.jsx    one prerendered page per room
+  directory/page.jsx    the building
+providers/              session (identity) · player (the tuner) · presence
+components/office/
+  WorkspaceScreen.jsx   the three columns and the desk
+  RoomStage.jsx         wall, floor, station, lighting
+  Floor.jsx             people standing on it
+  Persona.jsx Props.jsx PersonCard.jsx
+  NavRail.jsx ActivityColumn.jsx MusicDesk.jsx
+  QueuePanel.jsx MyDeskPanel.jsx DirectoryScreen.jsx
 lib/
-  playlist.js             the 50 tracks
-  constants.js            timings, sizes, error codes
-  scene-geometry.js       generated positions for dust motes and city windows
-  utils/                  time formatting, shuffle, YouTube URLs, DOM helpers
-scripts/                  playlist verification tools (plain Node)
-postcss.config.mjs        Tailwind's PostCSS plugin, picked up by Turbopack
+  presence/             ⚠ the seam, and the local simulation behind it
+  areas.js rooms.js floor-space.js identity.js palette.js seed.js
+  playlist.js constants.js utils/
 ```
-
-Styling is Tailwind utilities in the components. `app/globals.css` holds only
-what utilities cannot express: the palette and font tokens, the two extra
-breakpoints (`pill` at 561px and `wide` at 701px, where the player pill reflows),
-every `@keyframes` used by the scene, and the `seek-range` utility for the range
-input's vendor pseudo-elements.
-
-State lives in `hooks/`, markup lives in `components/`. The only components
-carrying `'use client'` are the ones that own state or touch the DOM —
-`ChillOffice`, `DeskClock` and `TrackPanel`.
 
 A few decisions that are easy to undo by accident:
 
+- **`<body>` has no background.** `html` carries it. A second opaque background
+  there paints as an ordinary box and buries the ambient light behind it. That
+  bug shipped once already.
+- **The station sits at the same z-index the floor gives mid-depth**, so people
+  walk in front of it. Remove that overlap and the album art immediately reads as
+  a UI card pinned over a picture.
+- **`findSpot` enforces a minimum gap between people.** Every figure carries a
+  name plate, and two plates on top of each other turns a room back into noise.
+- **People are seeded as already-here on arrival.** Without it the entire floor
+  reads "Just joined" for the first fifteen seconds of every visit.
 - **The YouTube iframe is parked off-screen** at `left: -10000px`, not hidden
-  with `display: none`. Hiding it stops playback, so it has to stay laid out.
-- **The player is constructed with its first `videoId` already set.** Built empty
-  it can sit there without ever firing `onReady`, leaving a spinner forever.
-- **`<Colleagues />` renders before `<Couch />`**, so the backrest crops them at
-  the shoulders. SVG has no z-index — reordering those two makes the colleagues
-  float in front of the couch.
-- **The desk clock renders nothing until it mounts.** The server has no idea what
-  time it is where the visitor is, so rendering a time server-side would hydrate
-  mismatched.
-- **The record sleeve is `scale(1.4)`.** YouTube thumbnails are 16:9 with
-  letterbox bars; without the scale you see the bars inside the circle.
-- Tracks YouTube refuses are marked with `⚠` in the queue and skipped
-  automatically, with a guard so an entirely dead queue does not loop forever.
+  with `display: none`. Hiding it stops playback.
+- **Nothing hard-blinks.** Every repeating animation eases between two values
+  over seconds. A `step-end` keyframe reads as a fault, not as life.
+- **The artwork is `scale(1.34)`.** YouTube's `hqdefault` is 480×360 with
+  letterbox bars; 1.34 is exactly the zoom that pushes them out of a square crop.
 
-The scene ships as SVG rather than an image: no downloaded assets, no licensing
-question, sharp at any size, and the steam, dust, flickering city windows and
-swaying pendant lamps are all CSS. It all collapses under
-`prefers-reduced-motion`.
+Everything collapses under `prefers-reduced-motion`.
 
 ## Credit
 

@@ -4,66 +4,78 @@ import { useEffect, useRef } from 'react'
 import { isTypingTarget } from '@/lib/utils/dom'
 
 /**
- * Global playback shortcuts. Handlers are read through a ref so the listener is
- * bound once for the life of the page instead of on every render.
+ * Global shortcuts. Handlers are read through a ref so the listener binds once
+ * for the life of the page instead of on every render.
  *
- * @param {object}   handlers
- * @param {Function} [handlers.onTogglePlay]     space
- * @param {Function} [handlers.onSeekForward]    right arrow
- * @param {Function} [handlers.onSeekBackward]   left arrow
- * @param {Function} [handlers.onNext]           shift + right arrow
- * @param {Function} [handlers.onPrevious]       shift + left arrow
- * @param {Function} [handlers.onToggleMute]     M
- * @param {Function} [handlers.onToggleShuffle]  S
- * @param {Function} [handlers.onToggleQueue]    Q
- * @param {Function} [handlers.onToggleAmbience] V
- * @param {Function} [handlers.onCloseQueue]     escape
+ * Typing targets are exempt from everything, which matters more here than in
+ * most apps: the composer is always focusable and `/` is a binding.
+ *
+ * @param {object}   on
+ * @param {Function} [on.togglePlay]   space
+ * @param {Function} [on.seekForward]  →
+ * @param {Function} [on.seekBackward] ←
+ * @param {Function} [on.next]         ⇧ →
+ * @param {Function} [on.previous]     ⇧ ←
+ * @param {Function} [on.say]          /
+ * @param {Function} [on.wander]       R
+ * @param {Function} [on.discover]     D
+ * @param {Function} [on.queue]        Q
+ * @param {Function} [on.shuffle]      S
+ * @param {Function} [on.escape]       esc
  */
-export function useKeyboardShortcuts(handlers) {
-  const latest = useRef(handlers)
+export function useKeyboardShortcuts(on) {
+  const latest = useRef(on)
   useEffect(() => {
-    latest.current = handlers
+    latest.current = on
   })
 
   useEffect(() => {
     const onKey = (event) => {
-      // Leave form fields and browser/OS chords alone.
-      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey) return
-      const on = latest.current
+      const handlers = latest.current
+
+      // Escape is the one binding that works while typing — it is how you get
+      // out of the composer.
+      if (event.key === 'Escape') {
+        handlers.escape?.()
+        return
+      }
+
+      if (isTypingTarget(event.target) || event.metaKey || event.ctrlKey || event.altKey) return
 
       switch (event.key) {
         case ' ':
           event.preventDefault()
-          on.onTogglePlay?.()
+          handlers.togglePlay?.()
           break
         case 'ArrowRight':
           event.preventDefault()
-          if (event.shiftKey) on.onNext?.()
-          else on.onSeekForward?.()
+          if (event.shiftKey) handlers.next?.()
+          else handlers.seekForward?.()
           break
         case 'ArrowLeft':
           event.preventDefault()
-          if (event.shiftKey) on.onPrevious?.()
-          else on.onSeekBackward?.()
+          if (event.shiftKey) handlers.previous?.()
+          else handlers.seekBackward?.()
           break
-        case 'm':
-        case 'M':
-          on.onToggleMute?.()
+        case '/':
+          event.preventDefault()
+          handlers.say?.()
           break
-        case 's':
-        case 'S':
-          on.onToggleShuffle?.()
+        case 'r':
+        case 'R':
+          handlers.wander?.()
+          break
+        case 'd':
+        case 'D':
+          handlers.discover?.()
           break
         case 'q':
         case 'Q':
-          on.onToggleQueue?.()
+          handlers.queue?.()
           break
-        case 'v':
-        case 'V':
-          on.onToggleAmbience?.()
-          break
-        case 'Escape':
-          on.onCloseQueue?.()
+        case 's':
+        case 'S':
+          handlers.shuffle?.()
           break
         default:
           break
