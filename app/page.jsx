@@ -1,13 +1,16 @@
-import WorkspaceScreen from '@/components/office/WorkspaceScreen'
+import { redirect } from 'next/navigation'
 
 /**
  * Walking in the front door.
  *
- * There is no landing page. The building *is* the product, so `/` drops you
- * straight onto the busiest floor with the music already cued — reading about
- * a room you could be standing in would be a worse introduction than standing
- * in it.
+ * The front door is the road: `/` hands straight over to `/drive` so the game
+ * is the first thing you see, with the music already cued.
+ *
+ * The office is not gone — `<WorkspaceScreen />` still runs every room at
+ * `/room/<id>`, and the floor plan is still at `/directory`. To put the
+ * building back on the doorstep, delete this file's redirect and return
+ * `<WorkspaceScreen />` again.
  */
 export default function HomePage() {
-  return <WorkspaceScreen />
+  redirect('/drive')
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer'
 import { ROOMS, ROOMS_BY_HEAT, roomById } from '@/lib/rooms'
@@ -20,6 +20,7 @@ const DEFAULT_ROOM = ROOMS_BY_HEAT[0].id
  */
 export function PlayerProvider({ children }) {
   const router = useRouter()
+  const pathname = usePathname()
 
   const [roomId, setRoomId] = useState(DEFAULT_ROOM)
   const [history, setHistory] = useState([])
@@ -34,6 +35,19 @@ export function PlayerProvider({ children }) {
   roomRef.current = roomId
   const shuffleRef = useRef(shuffle)
   shuffleRef.current = shuffle
+  const pathRef = useRef(pathname)
+  pathRef.current = pathname
+
+  /**
+   * Whether the screen you are on is showing a room.
+   *
+   * Route follows state — but only where the route *is* the room. Advancing the
+   * queue from somewhere that is not a room view (the drive, say) must not
+   * navigate, or finishing a track quietly throws you out of whatever you were
+   * doing and into the office. Explicit picks still navigate; this only governs
+   * the automatic advances.
+   */
+  const showingRoom = useCallback(() => pathRef.current?.startsWith('/room/') ?? false, [])
 
   const indexOf = useCallback((id) => ROOMS.findIndex((r) => r.id === id), [])
 
@@ -55,15 +69,15 @@ export function PlayerProvider({ children }) {
   const adopt = useCallback((id) => enter(id, { navigate: false }), [enter])
 
   const step = useCallback(
-    (delta) => {
+    (delta, options) => {
       const ids = ROOMS.map((r) => r.id)
       if (shuffleRef.current) {
         const others = ids.filter((id) => id !== roomRef.current)
-        enter(others[Math.floor(Math.random() * others.length)])
+        enter(others[Math.floor(Math.random() * others.length)], options)
         return
       }
       const at = indexOf(roomRef.current)
-      enter(ids[(at + delta + ids.length) % ids.length])
+      enter(ids[(at + delta + ids.length) % ids.length], options)
     },
     [enter, indexOf],
   )
@@ -74,16 +88,21 @@ export function PlayerProvider({ children }) {
     enter(others[Math.floor(Math.random() * others.length)].id)
   }, [enter])
 
-  const handleEnded = useCallback(() => step(1), [step])
+  const handleEnded = useCallback(
+    () => step(1, { navigate: showingRoom() }),
+    [step, showingRoom],
+  )
 
   const handleUnavailable = useCallback(
     (code) => {
       // eslint-disable-next-line no-console
       console.warn(`room ${roomRef.current} is unplayable (YouTube error ${code})`)
       setUnplayable((seen) => new Set(seen).add(roomRef.current))
-      step(1)
+      // Skipping past a dead embed is an automatic advance too, so it follows
+      // the same rule: do not navigate off a screen that is not a room.
+      step(1, { navigate: showingRoom() })
     },
-    [step],
+    [step, showingRoom],
   )
 
   const player = useYouTubePlayer({
@@ -107,9 +126,9 @@ export function PlayerProvider({ children }) {
   const skip = useCallback(
     (delta) => {
       if (playing) armAutoplay()
-      step(delta)
+      step(delta, { navigate: showingRoom() })
     },
-    [playing, armAutoplay, step],
+    [playing, armAutoplay, step, showingRoom],
   )
 
   const value = useMemo(
@@ -128,13 +147,15 @@ export function PlayerProvider({ children }) {
       skip,
       next: () => skip(1),
       previous: () => skip(-1),
+      /** Also the guard the unavailable-track handler leans on. */
+      showingRoom,
       toggleShuffle: () => setShuffle((s) => !s),
       /** The room after this one, for the "up next" line. */
       upNext: ROOMS[(indexOf(roomId) + 1) % ROOMS.length],
     }),
     [
       room, track, roomId, history, shuffle, unplayable, player,
-      enter, enterPlaying, adopt, wander, skip, indexOf,
+      enter, enterPlaying, adopt, wander, skip, indexOf, showingRoom,
     ],
   )
 
